@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Maker — Let Fate Pick For You</title>
+<style>
+  /* ---- Decision Maker styles ---- */
+  :root {
+    --bg: #12121a;
+    --card: #1d1d28;
+    --gold: #f5c518;
+    --text: #f4f4f4;
+    --muted: #9a9ab0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 2rem;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    align-self: flex-start;
+  }
+  h1 { font-size: 1.9rem; margin-bottom: .25rem; }
+  h1 .gold { color: var(--gold); }
+  p.sub { color: var(--muted); margin-bottom: 1.25rem; }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #14141d;
+    color: var(--text);
+    border: 1px solid #33334a;
+    border-radius: 10px;
+    padding: .8rem;
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+  }
+  textarea:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+  .btn-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: .8rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .1s ease;
+  }
+  button:active { transform: scale(.96); }
+  #pickBtn { background: var(--gold); color: #12121a; flex: 1; }
+  #clearBtn { background: #2b2b3d; color: var(--text); }
+  /* The spinning wheel: an emoji wheel whose rotation is animated */
+  #wheelWrap { text-align: center; margin: 0 auto 1rem; }
+  #wheel {
+    font-size: 4.5rem;
+    display: inline-block;
+    transition: transform 2.2s cubic-bezier(.15,.8,.25,1);
+  }
+  #result {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    min-height: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  #result .winner { color: var(--gold); }
+  #history { list-style: none; margin-top: 1rem; }
+  #history li {
+    background: #14141d;
+    border-radius: 8px;
+    padding: .5rem .8rem;
+    margin-bottom: .4rem;
+    font-size: .95rem;
+    color: var(--muted);
+  }
+  #history li strong { color: var(--gold); }
+  h2 { font-size: 1.1rem; margin-top: 1.5rem; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🤔 Decision <span class="gold">Maker</span></h1>
+    <p class="sub">Too many options? Type them in — fate decides in one spin.</p>
+
+    <!-- One option per line, e.g. Pizza / Sushi / Tacos -->
+    <textarea id="options" placeholder="Type your options, one per line:&#10;Pizza&#10;Sushi&#10;Tacos"></textarea>
+
+    <div class="btn-row">
+      <button id="pickBtn">🎲 PICK FOR ME</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+
+    <!-- Spinning emoji wheel for drama -->
+    <div id="wheelWrap"><span id="wheel">🎡</span></div>
+    <div id="result"></div>
+
+    <h2>📜 Past verdicts</h2>
+    <ul id="history"></ul>
+  </div>
+
+<script>
+  // Grab our DOM elements once
+  const optionsEl = document.getElementById("options");
+  const pickBtn = document.getElementById("pickBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const wheel = document.getElementById("wheel");
+  const result = document.getElementById("result");
+  const history = document.getElementById("history");
+
+  let spinning = false;      // guard so we can't spam-click mid-spin
+  let totalRotation = 0;     // keeps the wheel rotating smoothly between spins
+
+  // Parse the textarea: non-empty lines, trimmed, duplicates removed
+  function getOptions() {
+    return [...new Set(
+      optionsEl.value.split("\n").map(s => s.trim()).filter(Boolean)
+    )];
+  }
+
+  pickBtn.addEventListener("click", () => {
+    const opts = getOptions();
+    if (opts.length < 2) {
+      result.innerHTML = "⚠️ Enter <b>at least 2</b> options first!";
+      return;
+    }
+    if (spinning) return;
+    spinning = true;
+    result.textContent = "Spinning…";
+
+    // Spin: add several full turns plus a random offset for suspense
+    totalRotation += 360 * 4 + Math.floor(Math.random() * 360);
+    wheel.style.transform = `rotate(${totalRotation}deg)`;
+
+    // Pick the winner while the wheel spins (the drama is theater — and fun)
+    const winner = opts[Math.floor(Math.random() * opts.length)];
+
+    setTimeout(() => {
+      result.innerHTML = `🏆 <span class="winner">${winner}</span> wins!`;
+      const li = document.createElement("li");
+      li.innerHTML = `The wheel chose <strong>${winner}</strong>`;
+      history.prepend(li);   // newest verdict on top
+      spinning = false;
+    }, 2250); // matches the 2.2s CSS spin animation
+  });
+
+  clearBtn.addEventListener("click", () => {
+    optionsEl.value = "";
+    result.textContent = "";
+    history.innerHTML = "";
+  });
+</script>
+</body>
+</html>
